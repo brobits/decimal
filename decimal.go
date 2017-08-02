@@ -122,7 +122,7 @@ func NewFromString(value string) (Decimal, error) {
 		intString = value
 	} else if len(parts) == 2 {
 		// strip the insignificant digits for more accurate comparisons.
-		decimalPart := strings.TrimRight(parts[1], "0")
+		decimalPart := parts[1]
 		intString = parts[0] + decimalPart
 		expInt := -len(decimalPart)
 		exp += int64(expInt)
@@ -518,7 +518,7 @@ func (d Decimal) Float64() (f float64, exact bool) {
 //     -12.345
 //
 func (d Decimal) String() string {
-	return d.string(true)
+	return d.string(false)
 }
 
 // StringFixed returns a rounded fixed-point string with places digits after
