@@ -25,6 +25,7 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+	"log"
 )
 
 // DivisionPrecision is the number of decimal places in the result when it
@@ -122,9 +123,16 @@ func NewFromString(value string) (Decimal, error) {
 		intString = value
 	} else if len(parts) == 2 {
 		// strip the insignificant digits for more accurate comparisons.
-		decimalPart := parts[1]
-		intString = parts[0] + decimalPart
-		expInt := -len(decimalPart)
+		var decPart string
+		if parts[1][0] == '0' {
+			log.Printf("TRIMMING RIGHT %s", parts[1])
+			decPart = strings.TrimRight(parts[1], "0")
+			log.Printf("result=%s", decPart)
+		} else {
+			decPart = parts[1]
+		}
+		intString = parts[0] + decPart
+		expInt := -len(decPart)
 		exp += int64(expInt)
 	} else {
 		return Decimal{}, fmt.Errorf("can't convert %s to decimal: too many .s", value)
