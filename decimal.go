@@ -25,7 +25,6 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
-	"log"
 )
 
 // DivisionPrecision is the number of decimal places in the result when it
@@ -122,18 +121,31 @@ func NewFromString(value string) (Decimal, error) {
 		// an int
 		intString = value
 	} else if len(parts) == 2 {
-		// strip the insignificant digits for more accurate comparisons.
-		var decPart string
-		if parts[1][0] == '0' {
-			log.Printf("TRIMMING RIGHT %s", parts[1])
-			decPart = strings.TrimRight(parts[1], "0")
-			log.Printf("result=%s", decPart)
-		} else {
-			decPart = parts[1]
+		// only trim trailing zeroes if value is zero
+		intPart := parts[0]
+		decPart := parts[1]
+		zero := true
+		for i := 0; i < len(intPart); i++ {
+			if intPart[i] != '0' {
+				zero = false
+			}
 		}
-		intString = parts[0] + decPart
-		expInt := -len(decPart)
-		exp += int64(expInt)
+		if zero {
+			for i := 0; i < len(decPart); i++ {
+				if decPart[i] != '0' {
+					zero = false
+				}
+			}
+		}
+		// do not convert "." into 0, throw parsing error
+		if zero && len(intPart) > 0 && len(decPart) > 0 {
+			// collapse all zeroes into 0x10^0
+			intString = "0"
+			exp = 0
+		} else {
+			intString = intPart + decPart
+			exp += int64(-len(decPart))
+		}
 	} else {
 		return Decimal{}, fmt.Errorf("can't convert %s to decimal: too many .s", value)
 	}
@@ -143,12 +155,10 @@ func NewFromString(value string) (Decimal, error) {
 	if !ok {
 		return Decimal{}, fmt.Errorf("can't convert %s to decimal", value)
 	}
-
 	if exp < math.MinInt32 || exp > math.MaxInt32 {
 		// NOTE(vadim): I doubt a string could realistically be this long
 		return Decimal{}, fmt.Errorf("can't convert %s to decimal: fractional part too long", originalInput)
 	}
-
 	return Decimal{
 		value: dValue,
 		exp:   int32(exp),
@@ -526,7 +536,7 @@ func (d Decimal) Float64() (f float64, exact bool) {
 //     -12.345
 //
 func (d Decimal) String() string {
-	return d.string(false)
+	return d.string(true)
 }
 
 // StringFixed returns a rounded fixed-point string with places digits after

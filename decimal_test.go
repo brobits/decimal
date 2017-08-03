@@ -166,8 +166,10 @@ func TestNewFromStringDeepEquals(t *testing.T) {
 	}
 	tests := []StrCmp{
 		{"1", "1", true},
-		{"10", "10.0", true},
-		{"1.1", "1.10", true},
+		{"10", "10.0", false},
+		{"1.1", "1.10", false},
+		{"10.0", "10.0", true},
+		{"1.10", "1.10", true},
 		{"1.001", "1.01", false},
 	}
 
@@ -392,7 +394,6 @@ func TestDecimal_rescale(t *testing.T) {
 				s, d.String(),
 				d.value.String(), d.exp)
 		}
-
 		// test StringScaled
 		s2 := New(input.int, input.exp).StringScaled(input.rescale)
 		if s2 != s {
@@ -1445,6 +1446,7 @@ func TestNegativePow(t *testing.T) {
 	x := a.Pow(b)
 	if x.String() != "0.0625" {
 		t.Errorf("Error, saw %s", x.String())
+
 	}
 }
 
